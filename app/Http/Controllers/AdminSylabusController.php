@@ -15,9 +15,10 @@ class AdminSylabusController extends Controller
      */
     public function index()
     {
-        $sylabuengs = Sylabus::where('medium', 'english')->get();
-        $sylabugujs = Sylabus::where('medium', 'gujrati')->get();
-        return view('admin.sylabus.index', compact('sylabugujs', 'sylabuengs'));
+        $sylabuengs = Sylabus::where('medium', 'english')->orderBy('id', 'ASC')->get();
+        $sylabugujs = Sylabus::where('medium', 'gujrati')->orderBy('id', 'ASC')->get();
+        $sylabuhins = Sylabus::where('medium', 'hindi')->orderBy('id', 'ASC')->get();
+        return view('admin.sylabus.index', compact('sylabugujs', 'sylabuengs', 'sylabuhins'));
     }
 
     /**
@@ -72,33 +73,83 @@ class AdminSylabusController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $push = Sylabus::findOrFail($id);
+        try {
+            $push = Sylabus::findOrFail($id);
 
-        // $input = $request->all();
+            if (!$request->hasFile('file')) {
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Please select a PDF file to upload.',
+                    ], 422);
+                }
+                return Redirect::back()->with('alert', 'Please select a PDF file to upload.');
+            }
 
-        if ($file = $request->file('file')) {
+            $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+                'file' => 'required|mimes:pdf|max:25600',
+            ], [
+                'file.mimes' => 'The uploaded file must be a valid PDF (.pdf only).',
+                'file.max' => 'The PDF file size must not exceed 25 MB.',
+            ]);
+
+            if ($validator->fails()) {
+                $errorMsg = $validator->errors()->first('file');
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $errorMsg,
+                        'errors' => $validator->errors(),
+                    ], 422);
+                }
+                return Redirect::back()->with('alert', $errorMsg);
+            }
+
+            $file = $request->file('file');
+            $destination = public_path('sylabuspdf');
+            if (!file_exists($destination)) {
+                mkdir($destination, 0777, true);
+            }
 
             $str = $file->getClientOriginalName();
             $str = str_replace(' ', '_', $str);
 
-            $name = time() . $str;
+            $name = time() . '_' . $str;
 
-            $file->move('sylabuspdf', $name);
+            $file->move($destination, $name);
 
-            if ($push->file == '/sylabuspdf/') {
-
-            } else {
-                if (file_exists(public_path() . $push->file)) {
-                    unlink(public_path() . $push->file);
+            if ($push->file != '/sylabuspdf/' && !empty($push->getRawOriginal('file'))) {
+                $oldPath = public_path() . $push->file;
+                if (file_exists($oldPath) && is_file($oldPath)) {
+                    @unlink($oldPath);
                 }
             }
+
             $push->update([
                 'file' => $name,
             ]);
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Syllabus PDF updated successfully!',
+                    'file_url' => asset($push->file),
+                    'std' => $push->std,
+                    'medium' => $push->medium,
+                ]);
+            }
+
+            return Redirect::back()->with('alert', 'Syllabus PDF updated successfully');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Syllabus upload error: ' . $e->getMessage());
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Upload processing error: ' . $e->getMessage(),
+                ], 500);
+            }
+            return Redirect::back()->with('alert', 'Upload processing error: ' . $e->getMessage());
         }
-        //  return $input;
-        // $push->update($input);
-        return Redirect::back();
     }
 
     /**
@@ -109,6 +160,15 @@ class AdminSylabusController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $sylabu = Sylabus::findOrFail($id);
+        if ($sylabu->file != '/sylabuspdf/' && !empty($sylabu->getRawOriginal('file'))) {
+            if (file_exists(public_path() . $sylabu->file)) {
+                unlink(public_path() . $sylabu->file);
+            }
+        }
+        $sylabu->update([
+            'file' => null,
+        ]);
+        return Redirect::back()->with('alert', 'Syllabus PDF removed successfully');
     }
 }

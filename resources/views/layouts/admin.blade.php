@@ -398,34 +398,35 @@
 
 
   <!-- read more button in database -->
-  <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+  <!-- read more button in database -->
   <script type="text/javascript">
-    $('.read-more-content').addClass('hide_content')
-    $('.read-more-show, .read-more-hide').removeClass('hide_content')
+    $(document).ready(function() {
+      $('.read-more-content').addClass('hide_content');
+      $('.read-more-show, .read-more-hide').removeClass('hide_content');
 
-    // Set up the toggle effect:
-    $('.read-more-show').on('click', function(e) {
-      $(this).next('.read-more-content').removeClass('hide_content');
-      $(this).addClass('hide_content');
-      e.preventDefault();
+      // Set up the toggle effect:
+      $('.read-more-show').on('click', function(e) {
+        $(this).next('.read-more-content').removeClass('hide_content');
+        $(this).addClass('hide_content');
+        e.preventDefault();
+      });
+
+      // Changes contributed by @diego-rzg
+      $('.read-more-hide').on('click', function(e) {
+        var p = $(this).parent('.read-more-content');
+        p.addClass('hide_content');
+        p.prev('.read-more-show').removeClass('hide_content'); // Hide only the preceding "Read More"
+        e.preventDefault();
+      });
+
+      // form submit when change select option
+      var select = document.getElementById('client_id');
+      if (select) {
+        select.onchange = function() {
+          this.form.submit();
+        };
+      }
     });
-
-    // Changes contributed by @diego-rzg
-    $('.read-more-hide').on('click', function(e) {
-      var p = $(this).parent('.read-more-content');
-      p.addClass('hide_content');
-      p.prev('.read-more-show').removeClass('hide_content'); // Hide only the preceding "Read More"
-      e.preventDefault();
-    });
-  </script>
-  <!-- read more button end in database -->
-
-  <!-- form submit when change select option -->
-  <script type="text/javascript">
-    var select = document.getElementById('client_id');
-    select.onchange = function() {
-      this.form.submit();
-    };
   </script>
 
   <script type="text/javascript">
@@ -485,12 +486,14 @@
           }
         }
       });
-      $('[data-toggle=confirmation]').confirmation({
-        rootSelector: '[data-toggle=confirmation]',
-        onConfirm: function(event, element) {
-          element.trigger('confirm');
-        }
-      });
+      if (typeof $.fn.confirmation === 'function') {
+        $('[data-toggle=confirmation]').confirmation({
+          rootSelector: '[data-toggle=confirmation]',
+          onConfirm: function(event, element) {
+            element.trigger('confirm');
+          }
+        });
+      }
       $(document).on('confirm', function(e) {
         var ele = e.target;
         e.preventDefault();
@@ -555,8 +558,8 @@
   <script src="{{asset('bower_components/fastclick/lib/fastclick.js')}}"></script>
   <!-- AdminLTE App -->
   <script src="{{asset('js/adminlte.min.js')}}"></script>
-  <!-- AdminLTE dashboard demo (This is only for demo purposes) -->
-  <script src="{{asset('js/pages/dashboard.js')}}"></script>
+  <!-- AdminLTE dashboard demo (disabled to prevent Morris.js graph container errors) -->
+  {{-- <script src="{{asset('js/pages/dashboard.js')}}"></script> --}}
   <!-- AdminLTE for demo purposes -->
   <script src="{{asset('js/demo.js')}}"></script>
 

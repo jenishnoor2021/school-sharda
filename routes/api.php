@@ -18,7 +18,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('/data_get',[App\Http\Controllers\ApiLinksController::class, 'showdata'])->name('show');
+// Route::post('/data_get',[App\Http\Controllers\ApiLinksController::class, 'showdata'])->name('show');
 
 
 Route::fallback(function () {

@@ -227,7 +227,7 @@ Route::group(['middleware' => ['auth', 'usersession']], function () {
     Route::get('admin/sylabus/create', [AdminSylabusController::class, 'create'])->name('admin.sylabus.create');
     Route::post('admin/sylabus/store', [AdminSylabusController::class, 'store'])->name('admin.sylabus.store');
     Route::get('admin/sylabus/edit/{id}', [AdminSylabusController::class, 'edit'])->name('admin.sylabus.edit');
-    Route::patch('admin/sylabus/update/{id}', [AdminSylabusController::class, 'update'])->name('admin.sylabus.update');
+    Route::match(['patch', 'post'], 'admin/sylabus/update/{id}', [AdminSylabusController::class, 'update'])->name('admin.sylabus.update');
     Route::get('admin/sylabus/destroy/{id}', [AdminSylabusController::class, 'destroy'])->name('admin.sylabus.destroy');
     Route::delete('/mySylabusDeleteAll', [AdminSylabusController::class, 'deleteSylabusAll'])->name('deletesylabusAll');
     Route::get("admin/sylabus/active/{id}", [AdminSylabusController::class, 'sylabusActive'])->name('admin.sylabus.active');

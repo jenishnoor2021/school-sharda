@@ -196,9 +196,10 @@ class AdminController extends Controller
 
     public function syllabus(Request $request)
     {
-        $sylabuengs = Sylabus::where('medium', 'english')->get();
-        $sylabugujs = Sylabus::where('medium', 'gujrati')->get();
-        return view('frontend.syllabus', compact('sylabugujs', 'sylabuengs'));
+        $sylabuengs = Sylabus::where('medium', 'english')->orderBy('id', 'ASC')->get();
+        $sylabugujs = Sylabus::where('medium', 'gujrati')->orderBy('id', 'ASC')->get();
+        $sylabuhins = Sylabus::where('medium', 'hindi')->orderBy('id', 'ASC')->get();
+        return view('frontend.syllabus', compact('sylabugujs', 'sylabuengs', 'sylabuhins'));
     }
 
     public function infrastructure(Request $request)
